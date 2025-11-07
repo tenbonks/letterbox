@@ -2,6 +2,10 @@
 
 A simple mailing microservice
 
+_built on node v20.14.0_
+
+---
+
 ## Hints
 
 - If you need to update the port, make sure to update these places
@@ -13,3 +17,5 @@ A simple mailing microservice
 ```
  docker compose up --build
 ```
+
+---

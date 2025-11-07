@@ -1,9 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const nodemailer = require('nodemailer');
-
 const app = express();
+
 app.use(express.json());
+
+// --- CONFIG ---
+const ALLOWED_IPS = process.env.ALLOWED_IPS ? process.env.ALLOWED_IPS.split(',') : [];
+const API_KEY = process.env.API_KEY || null;
 
 // Utility function to check if a value is empty
 function isEmpty(value) {
@@ -15,6 +19,28 @@ function isEmpty(value) {
       (typeof value === 'object' && Object.keys(value).length === 0)
   );
 }
+
+// --- AUTH MIDDLEWARE ---
+app.use((req, res, next) => {
+  const requestIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress;
+  const apiKeyHeader = req.headers['x-api-key'];
+
+  console.log('Incoming IP:', requestIP);
+
+
+  // Allow API key override (useful for local testing)
+  if (API_KEY && apiKeyHeader === API_KEY) {
+    return next();
+  }
+
+  // Check if IP is in whitelist
+  if (ALLOWED_IPS.includes(requestIP)) {
+    return next();
+  }
+
+  console.warn(`Unauthorized request from ${requestIP}`);
+  return res.status(403).json({ error: 'Access denied' });
+});
 
 // Generate a simple HTML email template
 function generateEmailHTML(subject, text, company = {}) {
@@ -46,14 +72,33 @@ function generateEmailHTML(subject, text, company = {}) {
   `;
 }
 
+// --- LANDING PAGE ---
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send(`
+  <html>
+    <head>
+      <title>Letterbox Mailer</title>
+      <style>
+        body { font-family: Arial, sans-serif; background: #f8f9fa; color: #333; text-align: center; margin-top: 100px; }
+        h1 { color: #007bff; }
+        p { color: #555; }
+        code { background: #eee; padding: 2px 6px; border-radius: 4px; }
+      </style>
+    </head>
+    <body>
+      <h1>📮 Letterbox Mailer</h1>
+      <p>Your email relay server is running.</p>
+      <p>If you can see this page, then your IP is whitelisted</p>
+      <p>Use <code>POST /send</code> to send emails.</p>
+    </body>
+  </html>
+  `);
 });
 
+// --- SEND EMAIL ROUTE ---
 app.post('/send', async (req, res) => {
   const { to, subject, text, company } = req.body;
 
-  // validate required fields
   if (isEmpty(to)) return res.status(400).json({ error: "missing 'to'" });
   if (isEmpty(subject)) return res.status(400).json({ error: "missing 'subject'" });
   if (isEmpty(text)) return res.status(400).json({ error: "missing 'text'" });
@@ -73,8 +118,8 @@ app.post('/send', async (req, res) => {
       from: process.env.FROM_EMAIL,
       to,
       subject,
-      text, // plain text version
-      html: generateEmailHTML(subject, text, company), // HTML version
+      text,
+      html: generateEmailHTML(subject, text, company),
     });
 
     res.status(200).json({ message: 'Email sent successfully' });

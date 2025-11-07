@@ -1,0 +1,39 @@
+name: 🧪 Deploy to Staging
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    name: Deploy to Staging VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.STAGING_VPS_HOST }}
+          username: ${{ secrets.STAGING_VPS_USER }}
+          key: ${{ secrets.STAGING_VPS_SSH_KEY }}
+          port: ${{ secrets.STAGING_VPS_PORT }}
+          script: |
+            echo "🚀 Starting staging deployment at $(date)"
+
+            cd /path/to/staging/project || { echo "❌ Directory not found"; exit 1; }
+
+            echo "🔄 Pulling latest code..."
+            git fetch origin staging
+            git reset --hard origin/staging
+
+            echo "📦 Installing dependencies..."
+            npm install --production
+
+            echo "🧱 Building project..."
+            npm run build || echo "⚠️ No build step defined"
+
+            echo "🔁 Restarting PM2..."
+            pm2 reload staging-app || pm2 start server.js --name staging-app
+
+            echo "✅ Staging deployment complete at $(date)"

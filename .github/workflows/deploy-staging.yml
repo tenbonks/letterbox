@@ -31,6 +31,6 @@ jobs:
             npm install --production
 
             echo "🔁 Restarting PM2..."
-            pm2 reload staging-app || pm2 start server.js --name staging-app
+            pm2 reload letterbox || pm2 start index.js --name letterbox
 
             echo "✅ Staging deployment complete at $(date)"

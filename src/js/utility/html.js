@@ -4,8 +4,17 @@
 const { isEmpty } = require("./validation");
 
 // Generate a simple HTML email template
-function generateEmailHTML(subject, text, company = {}) {
+function generateEmailHTML(subject, fields = {}, company = {}) {
     const { name, address, phone } = company;
+
+    const fieldRows = Object.entries(fields)
+        .map(([key, value]) => {
+            return `<tr>
+        <td style="padding: 8px 12px; font-weight: 500; color: #E6FAF8;">${key}</td>
+        <td style="padding: 8px 12px; color: #E8E8E9;">${value}</td>
+      </tr>`;
+        })
+        .join("");
 
     return `
   <div style="font-family: 'Noto Sans', sans-serif; background-color: #0E0C14; padding: 32px; color: #E8E8E9;">
@@ -13,8 +22,10 @@ function generateEmailHTML(subject, text, company = {}) {
       <div style="background-color: #00c8bc; color: #1A1625; padding: 24px;">
         <h2 style="margin: 0; font-size: 24px; font-weight: 500;">${subject}</h2>
       </div>
-      <div style="padding: 24px; font-size: 16px; line-height: 1.6; white-space: pre-wrap;">
-        ${text}
+      <div style="padding: 24px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          ${fieldRows}
+        </table>
       </div>
       ${
         !isEmpty(company)
@@ -32,6 +43,7 @@ function generateEmailHTML(subject, text, company = {}) {
   </div>
   `;
 }
+
 
 
 function generateLandingPageHTML() {

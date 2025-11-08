@@ -30,11 +30,13 @@ app.post('/test-connection', (req, res) => {
 
 // --- SEND EMAIL ROUTE ---
 app.post('/send', async (req, res) => {
-  const { to, subject, text, company } = req.body;
+  const { to, subject, fields, company } = req.body;
 
   if (isEmpty(to)) return res.status(400).json({ error: "missing 'to'" });
   if (isEmpty(subject)) return res.status(400).json({ error: "missing 'subject'" });
-  if (isEmpty(text)) return res.status(400).json({ error: "missing 'text'" });
+  if (isEmpty(fields) || typeof fields !== 'object') {
+    return res.status(400).json({ error: "missing or invalid 'fields'" });
+  }
 
   try {
     const transporter = nodemailer.createTransport({
@@ -51,8 +53,8 @@ app.post('/send', async (req, res) => {
       from: process.env.FROM_EMAIL,
       to,
       subject,
-      text,
-      html: generateEmailHTML(subject, text, company),
+      text: Object.entries(fields).map(([k, v]) => `${k}: ${v}`).join('\n'),
+      html: generateEmailHTML(subject, fields, company),
     });
 
     res.status(200).json({ message: 'Email sent successfully' });
@@ -60,6 +62,7 @@ app.post('/send', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`letterbox running on port ${PORT}`));

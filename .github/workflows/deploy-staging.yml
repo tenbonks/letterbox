@@ -21,7 +21,7 @@ jobs:
           script: |
             echo "🚀 Starting staging deployment at $(date)"
 
-            cd /path/to/staging/project || { echo "❌ Directory not found"; exit 1; }
+            cd /var/www/letterbox || { echo "❌ Directory not found"; exit 1; }
 
             echo "🔄 Pulling latest code..."
             git fetch origin dev

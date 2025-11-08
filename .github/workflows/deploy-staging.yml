@@ -3,7 +3,7 @@ name: 🧪 Deploy to Staging
 on:
   push:
     branches:
-      - production
+      - dev
 
 jobs:
   deploy:
@@ -24,14 +24,11 @@ jobs:
             cd /path/to/staging/project || { echo "❌ Directory not found"; exit 1; }
 
             echo "🔄 Pulling latest code..."
-            git fetch origin staging
-            git reset --hard origin/staging
+            git fetch origin dev
+            git reset --hard origin/dev
 
             echo "📦 Installing dependencies..."
             npm install --production
-
-            echo "🧱 Building project..."
-            npm run build || echo "⚠️ No build step defined"
 
             echo "🔁 Restarting PM2..."
             pm2 reload staging-app || pm2 start server.js --name staging-app

@@ -24,6 +24,10 @@ app.get('/', (req, res) => {
   );
 });
 
+app.post('/test-connection', (req, res) => {
+  res.status(200).json({ message: 'You are allowed to connect to letterbox mailing relay service' });
+})
+
 // --- SEND EMAIL ROUTE ---
 app.post('/send', async (req, res) => {
   const { to, subject, text, company } = req.body;
